@@ -878,8 +878,37 @@ function populateMonthSelect() {
 }
 
 // ============================================================
-// DATA LOAD
+// DATA LOAD (using JSONP to bypass CORS)
 // ============================================================
+function jsonpRequest(url) {
+  return new Promise((resolve, reject) => {
+    const callbackName = 'jsonp_cb_' + Math.random().toString(36).substr(2, 9);
+    const timeoutId = setTimeout(() => {
+      cleanup();
+      reject(new Error('Request timed out — backend not responding'));
+    }, 15000);
+
+    function cleanup() {
+      delete window[callbackName];
+      if (script.parentNode) script.parentNode.removeChild(script);
+      clearTimeout(timeoutId);
+    }
+
+    window[callbackName] = function(data) {
+      cleanup();
+      resolve(data);
+    };
+
+    const script = document.createElement('script');
+    script.src = url + (url.includes('?') ? '&' : '?') + 'callback=' + callbackName;
+    script.onerror = () => {
+      cleanup();
+      reject(new Error('Failed to load backend — check the URL'));
+    };
+    document.head.appendChild(script);
+  });
+}
+
 async function loadData() {
   currentMonth = document.getElementById('monthSelect').value;
   showLoading();
@@ -889,8 +918,7 @@ async function loadData() {
       await new Promise(r => setTimeout(r, 300));
       currentData = DEMO_DATA;
     } else {
-      const res = await fetch(`${BACKEND_URL}?action=fullDashboard&month=${currentMonth}`);
-      const data = await res.json();
+      const data = await jsonpRequest(`${BACKEND_URL}?action=fullDashboard&month=${currentMonth}`);
       if (!data.ok) throw new Error(data.error || 'Backend error');
       currentData = data;
     }
@@ -915,7 +943,7 @@ function showError(msg) {
       <div class="empty-icon">⚠️</div>
       <h4>Could not load registry data</h4>
       <p>${escapeHtml(msg)}</p>
-      <p style="margin-top:10px;">Set <code>DEMO_MODE = false</code> in the script to see the platform without a backend.</p>
+      <p style="margin-top:10px;">Set <code>DEMO_MODE = true</code> in the script to see the platform without a backend.</p>
     </div>
   `;
 }
