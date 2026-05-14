@@ -1,0 +1,1762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>KIMS Mahadevapura — Insights Platform v2.0</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --teal-1: #1e5b75;
+    --teal-2: #2a7a9c;
+    --teal-deep: #0d3b4f;
+    --navy: #0a2540;
+    --gold: #d4af37;
+    --gold-soft: #e6c965;
+    --gold-deep: #8b6914;
+    --paper: #f7fbfc;
+    --paper-2: #eaf4f7;
+    --paper-3: #d4e2e8;
+    --ink: #0a1929;
+    --ink-2: #2d3a4a;
+    --muted: #6b7a8a;
+    --line: #d4e2e8;
+    --good: #2d6a4f;
+    --good-bg: #e8f5ee;
+    --warn: #b86b00;
+    --warn-bg: #fff5e6;
+    --alert: #c1272d;
+    --alert-bg: #fff1f2;
+    --purple: #5b3a8f;
+    --purple-bg: #f3eefa;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(180deg, var(--paper) 0%, var(--paper-2) 100%);
+    color: var(--ink);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ===== HEADER ===== */
+  header {
+    background: linear-gradient(135deg, var(--teal-1) 0%, var(--teal-deep) 100%);
+    color: white;
+    padding: 18px 28px;
+    box-shadow: 0 2px 12px rgba(13, 59, 79, 0.3);
+  }
+  header .header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  header h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: 1.4rem;
+    letter-spacing: 0.5px;
+  }
+  header .sub {
+    font-size: 0.78rem;
+    color: var(--gold-soft);
+    margin-top: 2px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  header select {
+    background: rgba(255,255,255,0.15);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.3);
+    padding: 7px 14px;
+    border-radius: 6px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  header select option { background: var(--teal-deep); color: white; }
+
+  /* ===== NAV TABS ===== */
+  .nav-tabs {
+    background: white;
+    border-bottom: 1px solid var(--line);
+    overflow-x: auto;
+    padding: 0 20px;
+    display: flex;
+    gap: 4px;
+  }
+  .nav-tab {
+    padding: 12px 18px;
+    border: none;
+    background: transparent;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .nav-tab:hover { color: var(--teal-1); background: var(--paper-2); }
+  .nav-tab.active {
+    color: var(--teal-1);
+    border-bottom-color: var(--gold);
+    font-weight: 600;
+  }
+  .nav-tab .ico { font-size: 1.1rem; opacity: 0.85; }
+  .nav-tab .new-badge {
+    background: var(--gold);
+    color: var(--navy);
+    font-size: 0.58rem;
+    padding: 1px 6px;
+    border-radius: 8px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+  }
+
+  .container {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 22px 20px 60px;
+  }
+
+  /* ===== STATES ===== */
+  .loading, .empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+  .loading .spinner {
+    border: 3px solid var(--paper-2);
+    border-top-color: var(--teal-1);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    margin: 0 auto 16px;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .empty-icon { font-size: 2.5rem; margin-bottom: 14px; opacity: 0.4; }
+  .empty h4 { color: var(--ink-2); margin-bottom: 6px; font-weight: 600; }
+  .empty p { font-size: 0.88rem; max-width: 460px; margin: 0 auto; line-height: 1.5; }
+
+  .demo-banner {
+    background: linear-gradient(135deg, var(--warn-bg), #fff8d6);
+    border-left: 4px solid var(--warn);
+    padding: 12px 18px;
+    border-radius: 8px;
+    margin-bottom: 18px;
+    font-size: 0.84rem;
+    color: var(--ink-2);
+  }
+  .demo-banner strong { color: var(--warn); }
+  .demo-banner code {
+    background: white;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-family: 'Consolas', monospace;
+    font-size: 0.82rem;
+  }
+
+  /* ===== KPI STRIP ===== */
+  .kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-bottom: 22px;
+  }
+  .kpi {
+    background: white;
+    padding: 16px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    text-align: left;
+    position: relative;
+    overflow: hidden;
+  }
+  .kpi::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+  .kpi.alert::before { background: var(--alert); }
+  .kpi.warn::before { background: var(--warn); }
+  .kpi.good::before { background: var(--good); }
+  .kpi.info::before { background: var(--teal-2); }
+  .kpi.purple::before { background: var(--purple); }
+  .kpi .lbl {
+    font-size: 0.68rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+  .kpi .num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.85rem;
+    color: var(--teal-deep);
+    font-weight: 700;
+    line-height: 1;
+  }
+  .kpi .delta { font-size: 0.74rem; margin-top: 5px; font-weight: 600; }
+  .delta.up { color: var(--good); }
+  .delta.down { color: var(--alert); }
+  .delta.flat { color: var(--muted); }
+  .delta.up-bad { color: var(--alert); }
+  .delta.down-good { color: var(--good); }
+
+  /* ===== NARRATIVE EXPORT CARD ===== */
+  .narrative-card {
+    background: linear-gradient(135deg, white, var(--paper-2));
+    border: 2px solid var(--gold);
+    border-radius: 14px;
+    padding: 20px 24px;
+    margin-bottom: 22px;
+  }
+  .narrative-card .eyebrow {
+    font-size: 0.68rem;
+    letter-spacing: 2px;
+    color: var(--gold-deep);
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .narrative-card h3 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.3rem;
+    color: var(--teal-deep);
+    margin-bottom: 4px;
+  }
+  .narrative-card p {
+    font-size: 0.85rem;
+    color: var(--ink-2);
+    line-height: 1.5;
+    margin-bottom: 12px;
+  }
+  .narrative-card .narrative-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  /* ===== BUTTONS ===== */
+  .btn {
+    padding: 9px 16px;
+    border: 1.5px solid var(--teal-1);
+    background: var(--teal-1);
+    color: white;
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.83rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn:hover { background: var(--teal-deep); transform: translateY(-1px); }
+  .btn.secondary { background: white; color: var(--teal-1); }
+  .btn.secondary:hover { background: var(--paper-2); }
+  .btn.gold { background: var(--gold); border-color: var(--gold); color: var(--navy); }
+  .btn.gold:hover { background: #b8961e; border-color: #b8961e; }
+  .btn.small { padding: 6px 12px; font-size: 0.78rem; }
+
+  /* ===== SECTION HEADS ===== */
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    margin-top: 26px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .section-head h3 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.3rem;
+    color: var(--teal-1);
+    font-weight: 600;
+  }
+  .section-head .tagline {
+    font-size: 0.72rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  /* ===== SIGNAL CARDS ===== */
+  .signals {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(370px, 1fr));
+    gap: 12px;
+  }
+  .signal {
+    background: white;
+    border-radius: 11px;
+    padding: 16px 18px;
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--teal-1);
+    transition: all 0.2s;
+  }
+  .signal:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(13, 59, 79, 0.08); }
+  .signal.alert { border-left-color: var(--alert); background: linear-gradient(135deg, white, var(--alert-bg)); }
+  .signal.warn { border-left-color: var(--warn); background: linear-gradient(135deg, white, var(--warn-bg)); }
+  .signal.good { border-left-color: var(--good); background: linear-gradient(135deg, white, var(--good-bg)); }
+  .signal.info { border-left-color: var(--teal-2); }
+  .signal.purple { border-left-color: var(--purple); background: linear-gradient(135deg, white, var(--purple-bg)); }
+  .signal-tag {
+    display: inline-block;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 7px;
+    margin-bottom: 7px;
+  }
+  .signal.alert .signal-tag { background: var(--alert); color: white; }
+  .signal.warn .signal-tag { background: var(--warn); color: white; }
+  .signal.good .signal-tag { background: var(--good); color: white; }
+  .signal.info .signal-tag { background: var(--teal-2); color: white; }
+  .signal.purple .signal-tag { background: var(--purple); color: white; }
+  .signal h4 {
+    font-size: 0.94rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 5px;
+    line-height: 1.35;
+  }
+  .signal p {
+    font-size: 0.83rem;
+    color: var(--ink-2);
+    line-height: 1.5;
+    margin-bottom: 6px;
+  }
+  .signal .recommendation {
+    font-size: 0.77rem;
+    color: var(--teal-1);
+    font-weight: 600;
+    padding-top: 6px;
+    border-top: 1px dashed var(--line);
+    margin-top: 6px;
+  }
+  .signal.alert .recommendation { color: var(--alert); }
+  .signal.warn .recommendation { color: var(--warn); }
+  .signal.good .recommendation { color: var(--good); }
+  .signal.purple .recommendation { color: var(--purple); }
+
+  /* ===== CHARTS ===== */
+  .charts-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 22px;
+    margin-top: 14px;
+  }
+  .chart-card {
+    background: white;
+    border-radius: 11px;
+    padding: 16px;
+    border: 1px solid var(--line);
+  }
+  .chart-card h5 {
+    font-size: 0.82rem;
+    color: var(--teal-1);
+    font-weight: 600;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+  .chart-wrap { height: 240px; }
+
+  /* ===== COHORT TRACKER CARDS ===== */
+  .cohort-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 14px;
+    margin-bottom: 22px;
+  }
+  .cohort {
+    background: white;
+    border-radius: 12px;
+    padding: 18px 20px;
+    border: 1px solid var(--line);
+    position: relative;
+    overflow: hidden;
+  }
+  .cohort.ready {
+    border: 2px solid var(--gold);
+    background: linear-gradient(135deg, white, #fff8e8);
+  }
+  .cohort .cohort-tag {
+    display: inline-block;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    background: var(--teal-2);
+    color: white;
+  }
+  .cohort.ready .cohort-tag {
+    background: var(--gold);
+    color: var(--navy);
+  }
+  .cohort h4 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.18rem;
+    color: var(--teal-deep);
+    margin-bottom: 4px;
+    font-weight: 600;
+  }
+  .cohort .meta {
+    font-size: 0.74rem;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .cohort .progress-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .cohort .num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.7rem;
+    color: var(--teal-1);
+    font-weight: 700;
+    line-height: 1;
+  }
+  .cohort.ready .num { color: var(--gold-deep); }
+  .cohort .target {
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .cohort .progress-bar {
+    height: 6px;
+    background: var(--paper-2);
+    border-radius: 3px;
+    overflow: hidden;
+    margin: 8px 0 12px;
+  }
+  .cohort .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--teal-1), var(--teal-2));
+    transition: width 0.6s;
+  }
+  .cohort.ready .progress-fill {
+    background: linear-gradient(90deg, var(--gold), var(--gold-soft));
+  }
+  .cohort .insight {
+    font-size: 0.83rem;
+    color: var(--ink-2);
+    line-height: 1.5;
+    padding-top: 8px;
+    border-top: 1px dashed var(--line);
+  }
+
+  /* ===== WORKLOAD VIEW ===== */
+  .workload-grid {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid var(--line);
+    margin-bottom: 18px;
+  }
+  .workload-row {
+    display: grid;
+    grid-template-columns: 1.5fr 60px 1fr 90px;
+    align-items: center;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--line);
+    gap: 12px;
+  }
+  .workload-row:last-child { border-bottom: none; }
+  .workload-row.header {
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-weight: 600;
+    padding-bottom: 8px;
+    border-bottom: 1.5px solid var(--teal-1);
+  }
+  .workload-row .name { font-weight: 600; color: var(--ink); font-size: 0.9rem; }
+  .workload-row .count { font-weight: 700; color: var(--teal-1); font-size: 1.05rem; text-align: right; }
+  .workload-row .bar-container {
+    background: var(--paper-2);
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .workload-row .bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--teal-1), var(--teal-2));
+  }
+  .workload-row.high .bar { background: linear-gradient(90deg, var(--warn), #d4830e); }
+  .workload-row.alert .bar { background: linear-gradient(90deg, var(--alert), #d63a40); }
+  .workload-row .flag {
+    font-size: 0.7rem;
+    padding: 3px 8px;
+    border-radius: 8px;
+    font-weight: 700;
+    text-align: center;
+    letter-spacing: 0.5px;
+  }
+  .flag.normal { background: var(--paper-2); color: var(--muted); }
+  .flag.heavy { background: var(--warn-bg); color: var(--warn); }
+  .flag.burnout-risk { background: var(--alert-bg); color: var(--alert); }
+  .flag.under { background: var(--purple-bg); color: var(--purple); }
+
+  /* ===== VIEW PANELS ===== */
+  .view-panel { display: none; }
+  .view-panel.active { display: block; }
+
+  /* ===== BURNOUT DASHBOARD ===== */
+  .burnout-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .burnout-stat {
+    background: white;
+    padding: 18px;
+    border-radius: 11px;
+    border: 1px solid var(--line);
+    text-align: center;
+  }
+  .burnout-stat.alert { border-top: 3px solid var(--alert); }
+  .burnout-stat.warn { border-top: 3px solid var(--warn); }
+  .burnout-stat.good { border-top: 3px solid var(--good); }
+  .burnout-stat .stat-val {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.1rem;
+    font-weight: 700;
+    color: var(--teal-deep);
+    line-height: 1;
+    margin-bottom: 5px;
+  }
+  .burnout-stat .stat-lbl {
+    font-size: 0.72rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+  }
+
+  /* ===== AI WORKFLOWS ===== */
+  .workflow-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 12px;
+  }
+  .workflow {
+    background: white;
+    border-radius: 12px;
+    padding: 18px 20px;
+    border: 1px solid var(--line);
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+  .workflow:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(13, 59, 79, 0.1);
+    border-color: var(--gold);
+  }
+  .workflow .ico {
+    font-size: 1.6rem;
+    margin-bottom: 8px;
+  }
+  .workflow h4 {
+    font-size: 0.95rem;
+    color: var(--ink);
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .workflow p {
+    font-size: 0.8rem;
+    color: var(--muted);
+    line-height: 1.45;
+    margin-bottom: 10px;
+  }
+  .workflow .freq {
+    font-size: 0.68rem;
+    color: var(--gold-deep);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-weight: 700;
+  }
+
+  /* ===== MEMORY VIEW ===== */
+  .memory-list {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    overflow: hidden;
+  }
+  .memory-entry {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: 130px 1fr 100px;
+    gap: 14px;
+    align-items: center;
+    transition: background 0.15s;
+    cursor: pointer;
+  }
+  .memory-entry:hover { background: var(--paper-2); }
+  .memory-entry:last-child { border-bottom: none; }
+  .memory-entry .date {
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .memory-entry .title {
+    font-size: 0.92rem;
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .memory-entry .title .preview {
+    color: var(--muted);
+    font-size: 0.82rem;
+    margin-top: 3px;
+  }
+  .memory-entry .action {
+    font-size: 0.77rem;
+    color: var(--teal-1);
+    font-weight: 600;
+    text-align: right;
+  }
+
+  /* ===== MODAL ===== */
+  .modal-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(13, 59, 79, 0.65);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    background: white;
+    border-radius: 14px;
+    max-width: 720px;
+    width: 100%;
+    max-height: 88vh;
+    overflow-y: auto;
+    padding: 28px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    position: relative;
+  }
+  .modal h3 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.5rem;
+    color: var(--teal-deep);
+    margin-bottom: 8px;
+    padding-right: 30px;
+  }
+  .modal .modal-sub {
+    color: var(--muted);
+    font-size: 0.86rem;
+    margin-bottom: 18px;
+  }
+  .modal ol, .modal ul {
+    margin-left: 22px;
+    margin-bottom: 16px;
+  }
+  .modal li {
+    font-size: 0.9rem;
+    color: var(--ink-2);
+    margin-bottom: 8px;
+    line-height: 1.5;
+  }
+  .modal pre {
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px;
+    font-family: 'Consolas', monospace;
+    font-size: 0.76rem;
+    color: var(--teal-deep);
+    overflow-x: auto;
+    max-height: 280px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    line-height: 1.45;
+  }
+  .modal-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+  .modal-close {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-size: 1.5rem;
+    cursor: pointer;
+    position: absolute;
+    top: 18px;
+    right: 22px;
+    line-height: 1;
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 900px) {
+    .kpi-strip { grid-template-columns: repeat(2, 1fr); }
+    .charts-row { grid-template-columns: 1fr; }
+    .burnout-stats { grid-template-columns: 1fr; }
+    .workload-row { grid-template-columns: 1.5fr 50px 70px; }
+    .workload-row .bar-container { display: none; }
+    .memory-entry { grid-template-columns: 1fr; }
+    .header-row { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-row">
+    <div>
+      <h1>KIMS Mahadevapura — Insights</h1>
+      <div class="sub">SUBBU REGISTRY INTELLIGENCE PLATFORM · V2.0</div>
+    </div>
+    <div>
+      <select id="monthSelect" onchange="loadData()"></select>
+    </div>
+  </div>
+</header>
+
+<nav class="nav-tabs" id="navTabs">
+  <button class="nav-tab active" data-view="overview" onclick="switchView('overview')"><span class="ico">📊</span> Overview</button>
+  <button class="nav-tab" data-view="signals" onclick="switchView('signals')"><span class="ico">🔔</span> Signals</button>
+  <button class="nav-tab" data-view="workforce" onclick="switchView('workforce')"><span class="ico">👥</span> Workforce</button>
+  <button class="nav-tab" data-view="cohorts" onclick="switchView('cohorts')"><span class="ico">🔬</span> Cohorts <span class="new-badge">NEW</span></button>
+  <button class="nav-tab" data-view="ai-workflows" onclick="switchView('ai-workflows')"><span class="ico">🤖</span> AI Workflows <span class="new-badge">NEW</span></button>
+  <button class="nav-tab" data-view="memory" onclick="switchView('memory')"><span class="ico">📚</span> Memory <span class="new-badge">NEW</span></button>
+  <button class="nav-tab" data-view="quality" onclick="switchView('quality')"><span class="ico">⚕️</span> Quality</button>
+</nav>
+
+<div class="container">
+  <div id="content">
+    <div class="loading">
+      <div class="spinner"></div>
+      <div>Loading insights from registry...</div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-backdrop" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">×</button>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// CONFIG — EDIT FOR PRODUCTION
+// ============================================================
+const BACKEND_URL = 'https://script.google.com/macros/u/1/s/AKfycbyta3z0AUx2ego947osWvi1W1XsnSg-SPo9cXj7kgRp0J2Xn1bQPfpxn_PEX9H5oQqh6Q/exec';
+const DEMO_MODE = false;
+
+// ============================================================
+// DEMO DATA (rich enough to feel real across all views)
+// ============================================================
+const DEMO_DATA = {
+  site: 'KIMS Mahadevapura',
+  month: '2026-05',
+  kpis: {
+    totalCases: 312, totalCasesPrev: 264, casesDeltaPct: 18.2,
+    complicationRate: 3.2, complicationRatePrev: 3.6, complicationDeltaPp: -0.4,
+    emergencyShare: 29, emergencyShareDeltaPp: 4,
+    regionalShare: 44, regionalShareDeltaPp: 1,
+    asaThreePlusShare: 24, meanDuration: 108
+  },
+  techniqueDist: [
+    { label: 'GA Volatile', count: 98 },
+    { label: 'TIVA Only', count: 69 },
+    { label: 'Spinal/Epidural', count: 56 },
+    { label: 'Combined GA+Regional', count: 38 },
+    { label: 'Combined GA+TIVA', count: 31 },
+    { label: 'MAC', count: 20 }
+  ],
+  signals: [
+    { severity: 'alert', category: 'Operational', title: 'Saturday emergency volume has risen sharply', body: 'Saturday emergency cases averaged 7 per week 6 weeks ago, now averaging 13.7 — a 96% increase. Sustained pattern, not a one-off spike.', action: 'Coordinate with ER and trauma surgery to identify root cause' },
+    { severity: 'warn', category: 'Workforce', title: 'Top three consultants handle 37% of monthly volume', body: 'Top three consultants each exceeded 36 cases this month. Workload skew is elevated. Compounded after-hours burden possible.', action: 'Review on-call distribution before next month rota finalises' },
+    { severity: 'good', category: 'Quality', title: 'Case-mix-adjusted complication rate is favourable', body: '3.2% complication rate against 24% ASA III+ proportion. Sicker patients, fewer complications — credible quality improvement signal.', action: 'Suitable to anchor a quality bulletin to leadership' },
+    { severity: 'info', category: 'Research', title: 'Hip/femur fracture cohort growing — 37 cases this month', body: 'At current rate, cumulative cohort will approach publication-grade adequacy (n=200) within 5–6 months. Strong candidate for a single-centre case series.', action: 'Set up structured audit protocol before cohort grows further' },
+    { severity: 'info', category: 'Practice Pattern', title: 'Regional anaesthesia share remains high — 44%', body: 'This places Mahadevapura well above national tertiary-care benchmarks (typically 25–32%). Distinct departmental clinical identity.', action: 'Worth amplifying — both as a teaching asset and a thought-leadership topic' },
+    { severity: 'warn', category: 'Data Quality', title: '3 consultants logged fewer than 8 cases', body: 'Below team median of 24. Could reflect leave, reduced workload, or under-reporting. Worth a quick check before workforce conclusions are drawn.', action: 'A friendly nudge usually resolves under-reporting' },
+    { severity: 'alert', category: 'Antibiotic Compliance', title: 'Antibiotic timing slipped to 78%', body: 'Antibiotic-within-60-min-of-incision compliance was 78% this month, down from 84% in April. Below NABH/JCI target of >90%.', action: 'Review the 22% non-compliant cases for root cause — likely workflow timing' },
+    { severity: 'good', category: 'Block Outcomes', title: 'Peripheral block complication rate at 0.5%', body: 'Across 137 regional blocks, only 1 complication recorded (transient nerve palsy, resolved). Sustained excellent outcome.', action: 'Strong evidence for NABH quality submission and ISACON poster' },
+    { severity: 'purple', category: 'Research Opportunity', title: 'TIVA cohort approaching publishable adequacy', body: '69 TIVA cases this month, cumulative ~280 over 4 months. PONV rate 4.8% vs 8.5% for volatile — consistent signal.', action: 'Worth committing to a structured prospective audit now' }
+  ],
+  consultants: [
+    { name: 'Dr. A', cases: 42, emergencyShare: 33, status: 'burnout-risk' },
+    { name: 'Dr. B', cases: 38, emergencyShare: 29, status: 'heavy' },
+    { name: 'Dr. C', cases: 36, emergencyShare: 36, status: 'burnout-risk' },
+    { name: 'Dr. D', cases: 29, emergencyShare: 21, status: 'normal' },
+    { name: 'Dr. E', cases: 26, emergencyShare: 23, status: 'normal' },
+    { name: 'Dr. F', cases: 24, emergencyShare: 20, status: 'normal' },
+    { name: 'Dr. G', cases: 22, emergencyShare: 18, status: 'normal' },
+    { name: 'Dr. H', cases: 21, emergencyShare: 22, status: 'normal' },
+    { name: 'Dr. I', cases: 19, emergencyShare: 15, status: 'normal' },
+    { name: 'Dr. J', cases: 18, emergencyShare: 19, status: 'normal' },
+    { name: 'Dr. K', cases: 14, emergencyShare: 25, status: 'normal' },
+    { name: 'Dr. L', cases: 7, emergencyShare: 14, status: 'under' }
+  ],
+  saturdayTrend: {
+    weeks: [
+      { weekKey: '22 Mar', count: 6 }, { weekKey: '29 Mar', count: 7 },
+      { weekKey: '5 Apr', count: 8 }, { weekKey: '12 Apr', count: 9 },
+      { weekKey: '19 Apr', count: 11 }, { weekKey: '26 Apr', count: 12 },
+      { weekKey: '3 May', count: 14 }, { weekKey: '10 May', count: 15 }
+    ]
+  },
+  cohorts: [
+    { name: 'Hip / Femur Fractures', tag: 'PUBLICATION-READY', meta: 'Combined neuraxial + light TIVA', current: 152, target: 200, status: 'approaching', insight: 'Cumulative cohort approaching publication-grade adequacy. Single-centre case series candidate for ISACON / Indian Journal of Anaesthesia. Set up audit protocol now to capture POD7 mobility and 30-day mortality.' },
+    { name: 'TIVA vs Volatile', tag: 'COHORT GROWING', meta: 'PONV outcome comparison', current: 286, target: 400, status: 'growing', insight: 'PONV rate 4.8% (TIVA) vs 8.5% (volatile). Signal consistent across 4 months. Becomes publishable around n=400 per arm. ~3 months out at current rate.' },
+    { name: 'Regional Anaesthesia Outcomes', tag: 'ESTABLISHED COHORT', meta: 'All blocks · complication tracking', current: 412, target: 500, status: 'mature', insight: 'Block complication rate 0.5%. Cohort is large enough for definitive single-centre outcome paper. Stratify by block type for next analysis.' },
+    { name: 'ASA III+ Outcomes', tag: 'BUILDING', meta: 'High-acuity outcome registry', current: 84, target: 300, status: 'early', insight: 'ASA III complication rate 8.1%, ASA IV 23.1%. Worth tracking as departmental NABH quality indicator. Cohort needs 6 more months to mature.' },
+    { name: 'Emergency Anaesthesia', tag: 'BUILDING', meta: 'After-hours and weekend cases', current: 142, target: 250, status: 'early', insight: 'Emergency share rose to 29% this month. Worth a separate outcomes analysis given the Saturday volume pattern.' },
+    { name: 'Difficult Airway Registry', tag: 'AWAITING DATA', meta: 'Requires sheet field expansion', current: 0, target: 100, status: 'pending', insight: 'Add a "difficult airway" boolean field to your sheet to activate this tracker. Will become valuable for departmental airway management protocols.' }
+  ],
+  burnoutMetrics: {
+    consecutiveNightShifts: { value: 3, status: 'warn', label: 'Max consecutive nights this month' },
+    weekendShare: { value: 18, status: 'alert', label: 'Cases on weekends (%)' },
+    afterHoursCases: { value: 47, status: 'warn', label: 'Cases starting after 6 PM' }
+  },
+  memory: [
+    { date: 'May 2026', title: 'Saturday emergency surge', preview: 'Volume doubled in 8 weeks; trauma surgery coordination initiated; new Saturday slot under consideration', month: '2026-05' },
+    { date: 'April 2026', title: 'TIVA-PONV signal strengthens', preview: 'Third consecutive month showing favourable TIVA outcomes; audit protocol drafted', month: '2026-04' },
+    { date: 'March 2026', title: 'Regional anaesthesia share hits 41%', preview: 'Three consecutive months above 40%; positioned as departmental clinical identity', month: '2026-03' },
+    { date: 'February 2026', title: 'First hip fracture case series review', preview: 'Cohort approaching N=100; combined neuraxial-TIVA technique becoming standard', month: '2026-02' },
+    { date: 'January 2026', title: 'Departmental volume baseline established', preview: 'Six-month baseline complete; metrics for NABH submission identified', month: '2026-01' }
+  ]
+};
+
+// ============================================================
+// STATE
+// ============================================================
+let currentMonth = '2026-05';
+let currentView = 'overview';
+let currentData = null;
+let charts = {};
+
+// ============================================================
+// INIT
+// ============================================================
+window.addEventListener('DOMContentLoaded', () => {
+  populateMonthSelect();
+  loadData();
+});
+
+function populateMonthSelect() {
+  const sel = document.getElementById('monthSelect');
+  const months = [
+    { ym: '2026-05', lbl: 'May 2026' }, { ym: '2026-04', lbl: 'April 2026' },
+    { ym: '2026-03', lbl: 'March 2026' }, { ym: '2026-02', lbl: 'February 2026' },
+    { ym: '2026-01', lbl: 'January 2026' }, { ym: '2025-12', lbl: 'December 2025' }
+  ];
+  sel.innerHTML = months.map(m =>
+    `<option value="${m.ym}" ${m.ym === currentMonth ? 'selected' : ''}>${m.lbl}</option>`
+  ).join('');
+}
+
+// ============================================================
+// DATA LOAD
+// ============================================================
+async function loadData() {
+  currentMonth = document.getElementById('monthSelect').value;
+  showLoading();
+
+  try {
+    if (DEMO_MODE) {
+      await new Promise(r => setTimeout(r, 300));
+      currentData = DEMO_DATA;
+    } else {
+      const res = await fetch(`${BACKEND_URL}?action=fullDashboard&month=${currentMonth}`);
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || 'Backend error');
+      currentData = data;
+    }
+    renderView(currentView);
+  } catch (err) {
+    showError(err.message);
+  }
+}
+
+function showLoading() {
+  document.getElementById('content').innerHTML = `
+    <div class="loading">
+      <div class="spinner"></div>
+      <div>Loading insights from registry...</div>
+    </div>
+  `;
+}
+
+function showError(msg) {
+  document.getElementById('content').innerHTML = `
+    <div class="empty">
+      <div class="empty-icon">⚠️</div>
+      <h4>Could not load registry data</h4>
+      <p>${escapeHtml(msg)}</p>
+      <p style="margin-top:10px;">Set <code>DEMO_MODE = false</code> in the script to see the platform without a backend.</p>
+    </div>
+  `;
+}
+
+// ============================================================
+// VIEW SWITCHING
+// ============================================================
+function switchView(view) {
+  currentView = view;
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`[data-view="${view}"]`).classList.add('active');
+  renderView(view);
+}
+
+function renderView(view) {
+  if (!currentData) return;
+  const demoNotice = DEMO_MODE ? `
+    <div class="demo-banner">
+      <strong>DEMO MODE.</strong> Sample data shown. Set <code>DEMO_MODE = false</code> and configure <code>BACKEND_URL</code> to connect to your live registry.
+    </div>` : '';
+
+  let html = demoNotice;
+  switch (view) {
+    case 'overview': html += renderOverview(); break;
+    case 'signals': html += renderSignals(); break;
+    case 'workforce': html += renderWorkforce(); break;
+    case 'cohorts': html += renderCohorts(); break;
+    case 'ai-workflows': html += renderAiWorkflows(); break;
+    case 'memory': html += renderMemory(); break;
+    case 'quality': html += renderQuality(); break;
+  }
+  document.getElementById('content').innerHTML = html;
+
+  // Render charts after DOM updates
+  setTimeout(() => {
+    if (view === 'overview') renderOverviewCharts();
+    if (view === 'workforce') renderWorkforceCharts();
+    if (view === 'quality') renderQualityCharts();
+  }, 50);
+}
+
+// ============================================================
+// OVERVIEW
+// ============================================================
+function renderOverview() {
+  const k = currentData.kpis;
+  return `
+    <div class="narrative-card">
+      <div class="eyebrow">Monthly Leadership Report</div>
+      <h3>Generate this month's narrative for KIMS leadership</h3>
+      <p>The data is ready. Export an aggregated, anonymised summary for Claude.ai to write the editorial narrative. ~10 minutes.</p>
+      <div class="narrative-actions">
+        <button class="btn gold" onclick="openExport('monthlyNarrative')">→ Export data for Claude.ai narrative</button>
+        <button class="btn secondary" onclick="openExport('ruleBasedSummary')">View rule-based summary</button>
+      </div>
+    </div>
+
+    <div class="kpi-strip">
+      <div class="kpi info">
+        <div class="lbl">Cases this month</div>
+        <div class="num">${k.totalCases}</div>
+        <div class="delta ${k.casesDeltaPct > 0 ? 'up' : 'down'}">${k.casesDeltaPct > 0 ? '↑' : '↓'} ${Math.abs(k.casesDeltaPct).toFixed(1)}% vs prev</div>
+      </div>
+      <div class="kpi ${k.complicationDeltaPp <= 0 ? 'good' : 'warn'}">
+        <div class="lbl">Complication rate</div>
+        <div class="num">${k.complicationRate}%</div>
+        <div class="delta ${k.complicationDeltaPp <= 0 ? 'down-good' : 'up-bad'}">${k.complicationDeltaPp > 0 ? '↑' : '↓'} ${Math.abs(k.complicationDeltaPp).toFixed(1)} pp</div>
+      </div>
+      <div class="kpi ${k.emergencyShareDeltaPp > 3 ? 'warn' : 'info'}">
+        <div class="lbl">Emergency share</div>
+        <div class="num">${k.emergencyShare}%</div>
+        <div class="delta ${k.emergencyShareDeltaPp > 0 ? 'up-bad' : 'down-good'}">${k.emergencyShareDeltaPp > 0 ? '↑' : '↓'} ${Math.abs(k.emergencyShareDeltaPp)} pp</div>
+      </div>
+      <div class="kpi info">
+        <div class="lbl">Regional share</div>
+        <div class="num">${k.regionalShare}%</div>
+        <div class="delta ${k.regionalShareDeltaPp > 0 ? 'up' : 'flat'}">${k.regionalShareDeltaPp > 0 ? '↑' : '→'} ${Math.abs(k.regionalShareDeltaPp)} pp</div>
+      </div>
+      <div class="kpi purple">
+        <div class="lbl">ASA III+ proportion</div>
+        <div class="num">${k.asaThreePlusShare}%</div>
+        <div class="delta flat">Mean ${k.meanDuration}min</div>
+      </div>
+    </div>
+
+    <div class="section-head">
+      <h3>Top signals</h3>
+      <div class="tagline">Most important auto-detected patterns · ${currentData.signals.length} total</div>
+    </div>
+    <div class="signals">
+      ${currentData.signals.slice(0, 4).map(s => renderSignalCard(s)).join('')}
+    </div>
+
+    <div class="section-head">
+      <h3>Activity snapshot</h3>
+      <div class="tagline">Anaesthesia technique & Saturday emergency trend</div>
+    </div>
+    <div class="charts-row">
+      <div class="chart-card">
+        <h5>Cases by Anaesthesia Technique</h5>
+        <div class="chart-wrap"><canvas id="chartTech"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h5>Saturday Emergency Trend (8 weeks)</h5>
+        <div class="chart-wrap"><canvas id="chartSat"></canvas></div>
+      </div>
+    </div>
+  `;
+}
+
+function renderSignalCard(s) {
+  return `
+    <div class="signal ${s.severity}">
+      <div class="signal-tag">${escapeHtml(s.category)}</div>
+      <h4>${escapeHtml(s.title)}</h4>
+      <p>${escapeHtml(s.body)}</p>
+      ${s.action ? `<div class="recommendation">→ ${escapeHtml(s.action)}</div>` : ''}
+    </div>
+  `;
+}
+
+// ============================================================
+// SIGNALS (full view)
+// ============================================================
+function renderSignals() {
+  return `
+    <div class="section-head">
+      <h3>All signals worth your attention</h3>
+      <div class="tagline">${currentData.signals.length} auto-detected · Clinical, operational, quality, research, workforce</div>
+    </div>
+    <div class="signals">
+      ${currentData.signals.map(s => renderSignalCard(s)).join('')}
+    </div>
+  `;
+}
+
+// ============================================================
+// WORKFORCE
+// ============================================================
+function renderWorkforce() {
+  const total = currentData.consultants.reduce((s, c) => s + c.cases, 0);
+  const max = Math.max(...currentData.consultants.map(c => c.cases));
+  const b = currentData.burnoutMetrics;
+
+  return `
+    <div class="section-head" style="margin-top:0;">
+      <h3>Workforce equity & burnout dashboard</h3>
+      <div class="tagline">Case-load distribution · After-hours load · Risk indicators</div>
+    </div>
+
+    <div class="burnout-stats">
+      <div class="burnout-stat ${b.consecutiveNightShifts.status}">
+        <div class="stat-val">${b.consecutiveNightShifts.value}</div>
+        <div class="stat-lbl">${b.consecutiveNightShifts.label}</div>
+      </div>
+      <div class="burnout-stat ${b.weekendShare.status}">
+        <div class="stat-val">${b.weekendShare.value}%</div>
+        <div class="stat-lbl">${b.weekendShare.label}</div>
+      </div>
+      <div class="burnout-stat ${b.afterHoursCases.status}">
+        <div class="stat-val">${b.afterHoursCases.value}</div>
+        <div class="stat-lbl">${b.afterHoursCases.label}</div>
+      </div>
+    </div>
+
+    <div class="workload-grid">
+      <div class="workload-row header">
+        <div>Consultant</div>
+        <div style="text-align:right;">Cases</div>
+        <div>Distribution</div>
+        <div style="text-align:center;">Status</div>
+      </div>
+      ${currentData.consultants.map(c => `
+        <div class="workload-row ${c.status === 'burnout-risk' ? 'alert' : c.status === 'heavy' ? 'high' : ''}">
+          <div class="name">${escapeHtml(c.name)}</div>
+          <div class="count">${c.cases}</div>
+          <div class="bar-container"><div class="bar" style="width:${(c.cases/max)*100}%"></div></div>
+          <div class="flag ${c.status}">${c.status === 'burnout-risk' ? 'BURNOUT RISK' : c.status === 'heavy' ? 'HEAVY' : c.status === 'under' ? 'UNDER' : 'NORMAL'}</div>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="narrative-card" style="margin-top:20px;">
+      <div class="eyebrow">Rota Planning Assistant</div>
+      <h3>Generate next month's rota balancing suggestion</h3>
+      <p>Export the workload distribution and let Claude.ai draft a rebalanced rota for next month — based on equity, complexity, and burnout risk.</p>
+      <div class="narrative-actions">
+        <button class="btn gold" onclick="openExport('rotaPlanning')">→ Export for rota planning</button>
+      </div>
+    </div>
+  `;
+}
+
+// ============================================================
+// COHORTS (academic layer)
+// ============================================================
+function renderCohorts() {
+  return `
+    <div class="section-head" style="margin-top:0;">
+      <h3>Research cohort trackers</h3>
+      <div class="tagline">Publishable signals · Academic asset tracking</div>
+    </div>
+
+    <div class="cohort-grid">
+      ${currentData.cohorts.map(c => {
+        const progress = Math.min(100, (c.current / c.target) * 100);
+        const isReady = c.status === 'approaching' || c.status === 'mature';
+        return `
+          <div class="cohort ${isReady ? 'ready' : ''}">
+            <div class="cohort-tag">${escapeHtml(c.tag)}</div>
+            <h4>${escapeHtml(c.name)}</h4>
+            <div class="meta">${escapeHtml(c.meta)}</div>
+            <div class="progress-row">
+              <div class="num">${c.current}</div>
+              <div class="target">of ${c.target} target</div>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:${progress}%"></div></div>
+            <div class="insight">${escapeHtml(c.insight)}</div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+
+    <div class="narrative-card" style="margin-top:18px;">
+      <div class="eyebrow">Publication Engine</div>
+      <h3>Generate a research abstract from any cohort</h3>
+      <p>Take any mature cohort to Claude.ai with a structured prompt — get a draft abstract in journal format (Background, Methods, Results, Conclusion).</p>
+      <div class="narrative-actions">
+        <button class="btn gold" onclick="openExport('cohortAbstract')">→ Export cohort for abstract generation</button>
+      </div>
+    </div>
+  `;
+}
+
+// ============================================================
+// AI WORKFLOWS (Claude.ai prompts)
+// ============================================================
+function renderAiWorkflows() {
+  const workflows = [
+    { ico: '📄', name: 'Monthly Leadership Narrative', desc: 'The flagship — full 2-page narrative for KIMS leadership in your Subbu Insights voice.', freq: 'MONTHLY · 10 MIN', action: 'monthlyNarrative' },
+    { ico: '🔍', name: 'Quarterly Research Scan', desc: 'Claude analyses 3 months of data, proposes 3 publishable research questions with feasibility scores.', freq: 'QUARTERLY · 15 MIN', action: 'researchScan' },
+    { ico: '⚕️', name: 'Auto-M&M Case Finder', desc: 'Identifies cases meeting M&M criteria (mortality, return-to-OT, ICU readmission). Drafts presentation.', freq: 'MONTHLY · 10 MIN', action: 'mmFinder' },
+    { ico: '📝', name: 'Conference Abstract Generator', desc: 'Pick a cohort. Get a structured abstract in ISACON / IJA / BJA format. Ready for review.', freq: 'AS NEEDED · 8 MIN', action: 'abstractGenerator' },
+    { ico: '✨', name: 'Subbu Insights LinkedIn Post', desc: 'Converts the month\'s top signal into a story-first LinkedIn post in your voice.', freq: 'MONTHLY · 5 MIN', action: 'linkedinPost' },
+    { ico: '🏥', name: 'NABH Documentation Pack', desc: 'Auto-maps registry data to specific NABH quality indicators. Generates evidence narrative.', freq: 'QUARTERLY · 15 MIN', action: 'nabhPack' },
+    { ico: '⚖️', name: 'Cross-Site Comparator', desc: 'Once Ecity registry is mirrored, compares both sites with strategic Director\'s read.', freq: 'MONTHLY · 10 MIN', action: 'crossSite' },
+    { ico: '📅', name: 'Rota Planning Assistant', desc: 'Reads workload distribution, drafts next-month rota with equity and burnout considerations.', freq: 'MONTHLY · 10 MIN', action: 'rotaPlanning' },
+    { ico: '🎯', name: 'Annual Department Review', desc: 'Synthesises 12 months of data into a polished annual departmental review.', freq: 'ANNUAL · 30 MIN', action: 'annualReview' }
+  ];
+
+  return `
+    <div class="section-head" style="margin-top:0;">
+      <h3>Claude.ai workflows</h3>
+      <div class="tagline">Ready-to-run prompts · Your registry × your Claude.ai subscription</div>
+    </div>
+    <p style="font-size:0.88rem;color:var(--muted);margin-bottom:18px;line-height:1.5;max-width:760px;">
+      Each workflow exports the relevant aggregated data and gives you a tuned prompt. Open Claude.ai, paste the prompt and the data, and get publication-grade output. All zero-cost — uses your existing Claude.ai subscription.
+    </p>
+    <div class="workflow-grid">
+      ${workflows.map(w => `
+        <div class="workflow" onclick="openExport('${w.action}')">
+          <div class="ico">${w.ico}</div>
+          <h4>${escapeHtml(w.name)}</h4>
+          <p>${escapeHtml(w.desc)}</p>
+          <div class="freq">${w.freq}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+// ============================================================
+// MEMORY (departmental archive)
+// ============================================================
+function renderMemory() {
+  return `
+    <div class="section-head" style="margin-top:0;">
+      <h3>Departmental memory</h3>
+      <div class="tagline">Searchable archive of every month's narrative and key signals</div>
+    </div>
+    <p style="font-size:0.87rem;color:var(--muted);margin-bottom:18px;line-height:1.5;max-width:760px;">
+      This is your institutional memory — every monthly narrative, every detected signal, every cohort milestone, preserved and searchable. New consultants can read two years of clinical context in an afternoon. NABH inspectors get a complete evidence trail.
+    </p>
+    <div class="memory-list">
+      ${currentData.memory.map(m => `
+        <div class="memory-entry" onclick="alert('In production: opens the full ${escapeHtml(m.date)} narrative archive.')">
+          <div class="date">${escapeHtml(m.date)}</div>
+          <div class="title">
+            ${escapeHtml(m.title)}
+            <div class="preview">${escapeHtml(m.preview)}</div>
+          </div>
+          <div class="action">View →</div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="narrative-card" style="margin-top:18px;">
+      <div class="eyebrow">Quarterly & Annual Synthesis</div>
+      <h3>Generate a quarterly review across stored months</h3>
+      <p>Select a quarter. Claude.ai synthesises the 3 monthly narratives into a quarterly leadership review — perfect for NABH audits and Board reports.</p>
+      <div class="narrative-actions">
+        <button class="btn gold" onclick="openExport('quarterlyReview')">→ Export quarter for review</button>
+      </div>
+    </div>
+  `;
+}
+
+// ============================================================
+// QUALITY (NABH/JCI-focused view)
+// ============================================================
+function renderQuality() {
+  return `
+    <div class="section-head" style="margin-top:0;">
+      <h3>Quality & accreditation dashboard</h3>
+      <div class="tagline">NABH / JCI quality indicators · Auto-mapped from registry</div>
+    </div>
+    <div class="kpi-strip">
+      <div class="kpi good">
+        <div class="lbl">Antibiotic timing</div>
+        <div class="num">78%</div>
+        <div class="delta down">↓ 6 pp vs Apr · Target >90%</div>
+      </div>
+      <div class="kpi good">
+        <div class="lbl">Block complications</div>
+        <div class="num">0.5%</div>
+        <div class="delta flat">Excellent · benchmark <2%</div>
+      </div>
+      <div class="kpi info">
+        <div class="lbl">Mortality (24h)</div>
+        <div class="num">0</div>
+        <div class="delta flat">Zero this month</div>
+      </div>
+      <div class="kpi info">
+        <div class="lbl">Awareness events</div>
+        <div class="num">0</div>
+        <div class="delta flat">None recorded</div>
+      </div>
+      <div class="kpi warn">
+        <div class="lbl">PAC documentation</div>
+        <div class="num">92%</div>
+        <div class="delta down">↓ 2 pp · Target >95%</div>
+      </div>
+    </div>
+
+    <div class="charts-row">
+      <div class="chart-card">
+        <h5>Complication Rate by ASA Grade</h5>
+        <div class="chart-wrap"><canvas id="chartAsa"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h5>Antibiotic Timing Trend (6 months)</h5>
+        <div class="chart-wrap"><canvas id="chartAbx"></canvas></div>
+      </div>
+    </div>
+
+    <div class="narrative-card" style="margin-top:14px;">
+      <div class="eyebrow">NABH/JCI Evidence Pack</div>
+      <h3>Generate documentation for accreditation</h3>
+      <p>Auto-maps registry data to specific NABH/JCI quality indicators. Claude.ai writes the evidence narrative for each indicator.</p>
+      <div class="narrative-actions">
+        <button class="btn gold" onclick="openExport('nabhPack')">→ Export for NABH evidence pack</button>
+      </div>
+    </div>
+  `;
+}
+
+// ============================================================
+// CHART RENDERERS
+// ============================================================
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.color = '#2d3a4a';
+
+function destroyChart(name) {
+  if (charts[name]) { charts[name].destroy(); charts[name] = null; }
+}
+
+function renderOverviewCharts() {
+  const techCanvas = document.getElementById('chartTech');
+  if (techCanvas) {
+    destroyChart('tech');
+    charts.tech = new Chart(techCanvas, {
+      type: 'doughnut',
+      data: {
+        labels: currentData.techniqueDist.map(t => t.label),
+        datasets: [{
+          data: currentData.techniqueDist.map(t => t.count),
+          backgroundColor: ['#1e5b75', '#2a7a9c', '#5fa8c4', '#d4af37', '#e6c965', '#a8c8d4'],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } } }
+      }
+    });
+  }
+  const satCanvas = document.getElementById('chartSat');
+  if (satCanvas) {
+    destroyChart('sat');
+    charts.sat = new Chart(satCanvas, {
+      type: 'line',
+      data: {
+        labels: currentData.saturdayTrend.weeks.map(w => w.weekKey),
+        datasets: [{
+          label: 'Saturday emergencies',
+          data: currentData.saturdayTrend.weeks.map(w => w.count),
+          borderColor: '#c1272d',
+          backgroundColor: 'rgba(193, 39, 45, 0.08)',
+          tension: 0.3, fill: true, pointRadius: 4, pointBackgroundColor: '#c1272d'
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, grid: { color: '#e8eef2' } }, x: { grid: { display: false } } }
+      }
+    });
+  }
+}
+
+function renderWorkforceCharts() {
+  // Already rendered as HTML bars; no chart needed here
+}
+
+function renderQualityCharts() {
+  const asaCanvas = document.getElementById('chartAsa');
+  if (asaCanvas) {
+    destroyChart('asa');
+    charts.asa = new Chart(asaCanvas, {
+      type: 'bar',
+      data: {
+        labels: ['ASA I', 'ASA II', 'ASA III', 'ASA IV'],
+        datasets: [{
+          label: 'Complication rate (%)',
+          data: [0, 1.3, 8.1, 23.1],
+          backgroundColor: ['#2d6a4f', '#5fa8c4', '#b86b00', '#c1272d']
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, grid: { color: '#e8eef2' } }, x: { grid: { display: false } } }
+      }
+    });
+  }
+  const abxCanvas = document.getElementById('chartAbx');
+  if (abxCanvas) {
+    destroyChart('abx');
+    charts.abx = new Chart(abxCanvas, {
+      type: 'line',
+      data: {
+        labels: ['Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May'],
+        datasets: [
+          {
+            label: 'Compliance %',
+            data: [82, 85, 86, 84, 84, 78],
+            borderColor: '#1e5b75',
+            backgroundColor: 'rgba(30, 91, 117, 0.1)',
+            tension: 0.3, fill: true, pointRadius: 4
+          },
+          {
+            label: 'NABH target',
+            data: [90, 90, 90, 90, 90, 90],
+            borderColor: '#d4af37',
+            borderDash: [5, 5],
+            pointRadius: 0
+          }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } },
+        scales: { y: { beginAtZero: false, min: 70, max: 100, grid: { color: '#e8eef2' } }, x: { grid: { display: false } } }
+      }
+    });
+  }
+}
+
+// ============================================================
+// EXPORT MODAL & AI WORKFLOW PROMPTS
+// ============================================================
+const PROMPTS = {
+  monthlyNarrative: {
+    title: 'Monthly Leadership Narrative',
+    sub: 'The flagship workflow. Generates a 2-page narrative in your Subbu Insights voice.',
+    steps: [
+      'Copy the data and prompt below.',
+      'Open Claude.ai → your "KIMS Mahadevapura — Registry Intelligence" project.',
+      'Paste the prompt followed by the data.',
+      'Review the narrative, refine if needed, distribute to leadership.'
+    ],
+    prompt: `Generate the Mahadevapura monthly narrative for the data below.
+
+EDITORIAL STYLE — write in Dr. S.S. Mahankali's voice:
+- Clear, intelligent, leadership-oriented; British English
+- Story-first executive summary, then structured sections
+- Identify patterns, name them plainly, suggest action
+- Treat reader as intelligent — no hype, no AI-style phrasing
+
+STRUCTURE — 2 pages, this order:
+1. Header (month, site, "for Dr. S.S. Mahankali, Director")
+2. Executive summary — 4-6 sentences, what matters most
+3. Volume & activity
+4. Clinical patterns
+5. Safety & quality
+6. Workforce
+7. Signals to watch (3-5 bullets)
+8. Recommended actions (concrete, owned)
+9. Looking ahead (strategic framing)
+
+DATA:`
+  },
+  researchScan: {
+    title: 'Quarterly Research Scan',
+    sub: 'Claude scans your data and proposes publishable research questions.',
+    steps: [
+      'Run this once per quarter using 3 months of monthly exports.',
+      'Paste the data + prompt into Claude.ai.',
+      'Review the 3 proposed questions with feasibility scores.',
+      'Pick one. Use Conference Abstract Generator for that question.'
+    ],
+    prompt: `You are advising Dr. Mahankali, Director of Anaesthesia, KIMS Mahadevapura, on what research is most publishable from his registry data.
+
+Review the 3 months of registry data below. Propose 3 publishable research questions, each with:
+- Research question (clear, focused)
+- Why it matters (clinical and academic)
+- Power assessment (do we have enough N?)
+- Confounders to address
+- Best target journal/conference
+- Feasibility score (1-10) and rationale
+
+Be honest. Some signals look strong but won't survive peer review. Tell me which ones will.
+
+DATA (3 months):`
+  },
+  mmFinder: {
+    title: 'Auto-M&M Case Finder',
+    sub: 'Identifies cases meeting M&M criteria and drafts the presentation.',
+    steps: [
+      'Export this month\'s aggregated data including complications.',
+      'Claude identifies cases meeting M&M criteria.',
+      'Get a structured M&M presentation outline.',
+      'Review with team, expand with chart-level detail.'
+    ],
+    prompt: `You are helping prepare the monthly M&M for the anaesthesia department at KIMS Mahadevapura.
+
+From the data below, identify cases that meet M&M criteria:
+- 24-hour or 30-day mortality
+- Return to OT within 48h
+- Unplanned ICU admission
+- Awareness event
+- Major regional block complication
+- Significant cardiovascular instability
+- Difficult airway not anticipated
+
+For each such case, provide:
+- One-line case summary
+- The specific M&M trigger
+- 3 discussion points for the team
+- Lessons that could shape protocol
+
+DATA:`
+  },
+  abstractGenerator: {
+    title: 'Conference Abstract Generator',
+    sub: 'Draft a structured abstract from any cohort data.',
+    steps: [
+      'Choose a cohort (e.g. hip fracture, TIVA, regional).',
+      'Export the cohort data and target journal/conference.',
+      'Get a structured abstract in journal format.',
+      'Review with co-authors before submission.'
+    ],
+    prompt: `Draft a structured abstract for the cohort below. Target: ISACON 2026 or Indian Journal of Anaesthesia.
+
+FORMAT (300 words max):
+- Background (2-3 sentences)
+- Methods (study design, setting, N, primary outcome)
+- Results (key numbers, including effect sizes and CIs)
+- Conclusions (1-2 sentences, what this changes)
+
+Be honest about limitations. Single-centre case series should not overclaim.
+
+COHORT DATA:`
+  },
+  linkedinPost: {
+    title: 'Subbu Insights LinkedIn Post',
+    sub: 'Turns the month\'s top signal into a story-first LinkedIn post.',
+    steps: [
+      'Export this month\'s top signal.',
+      'Paste into Claude.ai with this prompt.',
+      'Get a 300-word post in your voice.',
+      'Add an image and post.'
+    ],
+    prompt: `Write a 300-word LinkedIn post in Dr. S.S. Mahankali's "Subbu Insights" voice using the signal below.
+
+STYLE:
+- Story-first opening (1-2 sentences that hook)
+- Build the insight, not just the data point
+- One concrete takeaway for healthcare leaders
+- End with a thought or a question (not a CTA)
+- British English; clear, intelligent, leadership tone
+- No emojis, no hashtag spam (max 3 relevant hashtags at end)
+
+The hook should feel personal and authentic — not "I'm pleased to share."
+
+SIGNAL DATA:`
+  },
+  nabhPack: {
+    title: 'NABH/JCI Evidence Pack',
+    sub: 'Auto-maps registry data to accreditation quality indicators.',
+    steps: [
+      'Export the quality-focused data.',
+      'Claude maps each metric to NABH/JCI indicators.',
+      'Get evidence narratives ready for audit submission.',
+      'Review with the quality team.'
+    ],
+    prompt: `For NABH/JCI accreditation, map the registry data below to relevant quality indicators.
+
+For each indicator, provide:
+- Indicator name (NABH/JCI reference)
+- Current performance (with numerator/denominator)
+- Trend over the period
+- Comparison to benchmark
+- Evidence narrative (2-3 sentences) suitable for the audit submission
+
+Cover at minimum: surgical antibiotic prophylaxis timing, regional block complication rate, perioperative mortality, awareness events, PAC documentation completion.
+
+DATA:`
+  },
+  crossSite: {
+    title: 'Cross-Site Comparator (Mahadevapura ↔ Ecity)',
+    sub: 'Strategic Director\'s read across both sites. Activates when Ecity registry is mirrored.',
+    steps: [
+      'Available once Ecity Insights is also deployed.',
+      'Export both sites\' monthly data.',
+      'Claude generates a Director\'s strategic comparison.',
+      'Use for unified KIMS leadership reporting.'
+    ],
+    prompt: `You are advising Dr. Mahankali, Director of Anaesthesia across both KIMS Mahadevapura and KIMS Ecity.
+
+Compare the two sites' data for this month. Identify:
+- Where the sites converge (similar practice patterns)
+- Where they diverge (practice differences worth understanding)
+- Where one site outperforms the other (case-mix-adjusted)
+- Cross-pollination opportunities (what site A can teach site B)
+- A Director's strategic read for KIMS leadership
+
+Frame this as complementary identities, not competitive comparison.
+
+DATA:`
+  },
+  rotaPlanning: {
+    title: 'Rota Planning Assistant',
+    sub: 'Draft next month\'s rota with equity and burnout balancing.',
+    steps: [
+      'Export current month\'s workload distribution.',
+      'Claude proposes next-month rota adjustments.',
+      'Review with each consultant before publishing.',
+      'Track outcomes — does balanced rota reduce burnout signals?'
+    ],
+    prompt: `You are helping Dr. Mahankali plan next month's anaesthesia rota at KIMS Mahadevapura.
+
+Goals (in priority order):
+1. Reduce burnout risk for consultants flagged as high-load
+2. Bring under-loaded consultants closer to team median
+3. Maintain equitable emergency/after-hours distribution
+4. Respect known leave plans
+
+For each consultant, suggest:
+- Target case count for next month
+- Specific adjustments (cases to add/remove)
+- One-line rationale
+
+End with a brief note on which consultants need a personal conversation before the rota is published.
+
+CURRENT WORKLOAD DATA:`
+  },
+  annualReview: {
+    title: 'Annual Department Review',
+    sub: 'Synthesises 12 months into a polished annual review.',
+    steps: [
+      'Export all 12 months of data (December onward).',
+      'Claude synthesises a comprehensive annual review.',
+      'Use for hospital board presentation and NABH submission.',
+      'Anchor next year\'s strategic priorities.'
+    ],
+    prompt: `Draft the Annual Departmental Review for KIMS Mahadevapura Anaesthesia for the year covered by the data below.
+
+Audience: KIMS senior leadership, hospital board.
+
+Structure:
+1. Year in numbers (total cases, complications, key safety metrics)
+2. Clinical highlights (regional anaesthesia identity, TIVA shift, etc.)
+3. Quality & safety
+4. Workforce
+5. Research & academic output
+6. NABH/JCI quality indicator performance
+7. Cross-site comparison with Ecity (if available)
+8. Strategic priorities for next year
+
+Tone: Confident, evidence-grounded, leadership-oriented. British English.
+
+12 MONTHS OF DATA:`
+  },
+  cohortAbstract: {
+    title: 'Cohort-Specific Abstract Generation',
+    sub: 'Draft an abstract from a specific research cohort.',
+    steps: [
+      'Pick a cohort from the Cohorts tab.',
+      'Export the cohort\'s full data.',
+      'Claude drafts a structured abstract.',
+      'Iterate with co-authors before submission.'
+    ],
+    prompt: `Draft an abstract for the cohort below. Be specific to the actual data — do not generalise.
+
+Target: ISACON 2026 (poster) or Indian Journal of Anaesthesia (short report).
+
+Be honest about:
+- Single-centre limitations
+- Confounders not controlled
+- What this cohort can and cannot conclude
+
+COHORT DATA:`
+  },
+  quarterlyReview: {
+    title: 'Quarterly Review Synthesis',
+    sub: 'Combines 3 monthly narratives into a quarterly leadership review.',
+    steps: [
+      'Select the quarter from the Memory tab.',
+      'Export the 3 months\' aggregated data.',
+      'Claude synthesises a quarterly review.',
+      'Use for hospital quarterly reports and NABH audits.'
+    ],
+    prompt: `Synthesise the 3 monthly Mahadevapura registry datasets below into a quarterly leadership review.
+
+Audience: KIMS leadership.
+
+Identify:
+- The dominant narrative across the quarter
+- Trends emerging (not just one month\'s noise)
+- Persistent patterns worth amplifying
+- Concerns that need quarterly-level attention
+- Strategic positioning for next quarter
+
+Tone: Quarterly perspective — pattern detection, not month-to-month reporting.
+
+3 MONTHS OF DATA:`
+  },
+  ruleBasedSummary: {
+    title: 'Rule-Based Templated Summary',
+    sub: 'Quick automated summary — no AI involvement. Useful as a fallback or quick reference.',
+    steps: [
+      'This generates the bare-facts version of the month.',
+      'No editorial judgement, no narrative flow.',
+      'Useful for quick reference or as input to AI for refinement.'
+    ],
+    prompt: 'TEMPLATED OUTPUT (no AI needed):'
+  }
+};
+
+function openExport(action) {
+  const p = PROMPTS[action];
+  if (!p) return;
+
+  let payload;
+  if (action === 'ruleBasedSummary') {
+    const k = currentData.kpis;
+    payload = `MAHADEVAPURA ANAESTHESIA — ${currentData.month}\n\n` +
+      `Total cases: ${k.totalCases} (${k.casesDeltaPct > 0 ? '+' : ''}${k.casesDeltaPct.toFixed(1)}% vs prev)\n` +
+      `Complication rate: ${k.complicationRate}% (${k.complicationDeltaPp > 0 ? '+' : ''}${k.complicationDeltaPp} pp)\n` +
+      `Emergency share: ${k.emergencyShare}% (${k.emergencyShareDeltaPp > 0 ? '+' : ''}${k.emergencyShareDeltaPp} pp)\n` +
+      `Regional share: ${k.regionalShare}% (${k.regionalShareDeltaPp > 0 ? '+' : ''}${k.regionalShareDeltaPp} pp)\n` +
+      `ASA III+ proportion: ${k.asaThreePlusShare}%\n` +
+      `Mean duration: ${k.meanDuration} min\n\n` +
+      `SIGNALS DETECTED: ${currentData.signals.length}\n` +
+      currentData.signals.map((s, i) => `${i+1}. [${s.severity.toUpperCase()}] ${s.title}`).join('\n');
+  } else {
+    payload = p.prompt + '\n\n' + JSON.stringify({
+      site: currentData.site,
+      month: currentData.month,
+      kpis: currentData.kpis,
+      signals: currentData.signals,
+      techniqueDist: currentData.techniqueDist,
+      saturdayTrend: currentData.saturdayTrend,
+      consultants: action === 'rotaPlanning' ? currentData.consultants : undefined,
+      cohorts: (action === 'cohortAbstract' || action === 'researchScan') ? currentData.cohorts : undefined,
+      note: 'Patient identifiers stripped. Aggregated data only.'
+    }, null, 2);
+  }
+
+  const html = `
+    <h3>${escapeHtml(p.title)}</h3>
+    <div class="modal-sub">${escapeHtml(p.sub)}</div>
+    <ol>
+      ${p.steps.map(s => `<li>${escapeHtml(s)}</li>`).join('')}
+    </ol>
+    <pre id="exportPayload">${escapeHtml(payload)}</pre>
+    <div class="modal-actions">
+      <button class="btn gold" onclick="copyPayload()">📋 Copy prompt + data</button>
+      <button class="btn secondary" onclick="downloadPayload('${action}')">⬇ Download as text</button>
+      <button class="btn secondary" onclick="closeModal()">Close</button>
+    </div>
+  `;
+  document.getElementById('modalContent').innerHTML = html;
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+
+async function copyPayload() {
+  const text = document.getElementById('exportPayload').textContent;
+  try {
+    await navigator.clipboard.writeText(text);
+    alert('Copied. Now open Claude.ai and paste.');
+  } catch (err) {
+    alert('Could not copy automatically. Select the text and copy manually.');
+  }
+}
+
+function downloadPayload(action) {
+  const text = document.getElementById('exportPayload').textContent;
+  const blob = new Blob([text], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `mahadevapura_${action}_${currentMonth}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function escapeHtml(s) {
+  if (s === null || s === undefined) return '';
+  return String(s).replace(/[&<>"']/g, m => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[m]);
+}
+</script>
+
+</body>
+</html>
